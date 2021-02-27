@@ -5,9 +5,9 @@ import PlatformDevices from '../utils/PlatformDevices';
 import Constants from '../utils/Constants';
 
 export default function HomeScreen() {
-  const handlePressSleep = async () => {
+  const handlePressButton = async (action) => {
     try {
-      const url = 'http://192.168.1.17:8080/api/v1/activities?action=POO';
+      const url = `http://128.199.116.189:8180/api/v1/public/activities?action=${action}`;
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -16,9 +16,9 @@ export default function HomeScreen() {
         },
       });
       const result = await response.json();
-      console.log(result);
+      alert(`${result.message} hành động ${result.data.activityDesc}`);
     } catch (error) {
-      console.error(error);
+      alert(error);
     }
   };
 
@@ -39,41 +39,33 @@ export default function HomeScreen() {
         </View>
       </View>
       <View style={styles.categories}>
-        <TouchableOpacity onPress={handlePressSleep}>
-          <Category
-            image={require('../assets/beef.jpeg')}
-            title="Meats"
-            subTitle="6 types"
-          />
+        <TouchableOpacity
+          onPress={() => {
+            handlePressButton('EAT');
+          }}>
+          <ActionButton title="Ăn" />
         </TouchableOpacity>
-        <Category
-          image={require('../assets/vegetables.png')}
-          title="Vegetables"
-          subTitle="4 types"
-        />
-        <Category
-          image={require('../assets/rice-and-cereals.png')}
-          title="Cereals, Rice and Legumes"
-          subTitle="5 types"
-        />
-        <Category
-          image={require('../assets/eggs-and-dairy.png')}
-          title="Eggs and Dairy"
-          subTitle="10 types"
-        />
+        <TouchableOpacity
+          onPress={() => {
+            handlePressButton('SLEEP');
+          }}>
+          <ActionButton title="Ngủ" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handlePressButton('WAKE')}>
+          <ActionButton title="Dậy" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handlePressButton('POO')}>
+          <ActionButton title="Ị" />
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-function Category({image, title, subTitle}) {
+function ActionButton({title}) {
   return (
-    <View>
-      <Image source={image} style={styles.categoryImage} />
-      <View style={{position: 'absolute', bottom: 20, left: 20}}>
-        <Text style={{color: '#fff', fontSize: 20}}>{title}</Text>
-        <Text style={{color: '#fff'}}>{subTitle}</Text>
-      </View>
+    <View style={styles.categoryImage}>
+      <Text style={{color: '#117D89', fontSize: 20}}>{title}</Text>
     </View>
   );
 }
@@ -110,5 +102,9 @@ const styles = StyleSheet.create({
     height: PlatformDevices.deviceHeight / 5.5,
     width: '100%',
     borderRadius: 15,
+    borderWidth: 1.5,
+    borderColor: '#117D89',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

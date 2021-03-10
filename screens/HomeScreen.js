@@ -1,5 +1,12 @@
 import React from 'react';
-import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ToastAndroid,
+} from 'react-native';
 import {useState} from 'react';
 import {format} from 'date-fns';
 import Constants from '../utils/Constants';
@@ -14,6 +21,8 @@ export default function HomeScreen() {
   const [milkVolume, setMilkVolume] = useState(120);
 
   const resetDate = () => setDate(new Date());
+  const resetMamaMilk = () => setMamaMilk(false);
+  const resetMilkVolume = () => setMilkVolume(120);
   const onDateChange = (date) => setDate(date);
   const changeMilkVolume = (volume) => setMilkVolume(volume);
   const closeModal = () => setModalVisible(!modalVisible);
@@ -21,22 +30,37 @@ export default function HomeScreen() {
 
   const onTapActionButton = (action) => {
     resetDate();
+    resetMamaMilk();
+    resetMilkVolume();
     setModalVisible(true);
     setAction(action);
   };
 
+  const showToast = (content) => {
+    ToastAndroid.show(content, ToastAndroid.SHORT);
+  };
+
   const onSave = async () => {
+    const payload = {
+      createdOn: date.valueOf() / 1000,
+      activity: action.type,
+      volume: milkVolume,
+      isMamaMilk: mamaMilk,
+    };
+
     try {
-      const url = `http://128.199.116.189:8180/api/v1/public/activities?action=${action}`;
+      // const url = `http://128.199.116.189:8180/api/v1/public/activities?action=${action.type}`;
+      const url = 'http://192.168.1.17:8180/api/v1/public/activities';
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify(payload),
       });
       const result = await response.json();
-      alert(`${result.message} hành động ${result.data.activityDesc}`);
+      showToast(`${result.message} hoạt động ${result.data.activityDesc}`);
       closeModal();
     } catch (error) {
       alert(error);
@@ -47,7 +71,9 @@ export default function HomeScreen() {
     <View style={{backgroundColor: '#F3F3F3'}}>
       <Info />
       <View style={styles.actionContainer}>
-        <Text style={{marginBottom: 10, fontSize: 16}}>Hoạt động:</Text>
+        <Text style={{marginBottom: 10, fontSize: 16, fontStyle: 'italic'}}>
+          Hoạt động:
+        </Text>
         <View style={styles.row}>
           <ActionButton
             icon={<Icon name="baby-bottle-outline" size={30} />}
@@ -93,7 +119,7 @@ function Info() {
   return (
     <View style={styles.info}>
       <View style={styles.infoLeft}>
-        <Text style={{fontSize: 20}}>Xin chào, Anh!</Text>
+        <Text style={{fontSize: 20, fontWeight: 'bold'}}>Xin chào, Anh!</Text>
         <Text style={{color: 'grey'}}>
           {format(new Date(), 'MMMM dd yyyy')}
         </Text>

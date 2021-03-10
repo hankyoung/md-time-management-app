@@ -1,9 +1,16 @@
+import Slider from '@react-native-community/slider';
 import React from 'react';
-import {useEffect} from 'react';
-import {useState} from 'react';
-import {Modal, TouchableOpacity, View, Text, StyleSheet} from 'react-native';
+import {
+  Modal,
+  TouchableOpacity,
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+} from 'react-native';
 import DatePicker from 'react-native-date-picker';
-import PlatformDevices from '../utils/PlatformDevices';
+import RadioButton from '../components/RadioButton';
+import Constants from '../utils/Constants';
 
 export default function ActionModal({
   modalVisible,
@@ -11,6 +18,11 @@ export default function ActionModal({
   date,
   onDateChange,
   onSave,
+  action,
+  mamaMilk,
+  toggleMilk,
+  milkVolume,
+  changeMilkVolume,
 }) {
   return (
     <Modal
@@ -18,9 +30,45 @@ export default function ActionModal({
       transparent={true}
       visible={modalVisible}
       onRequestClose={requestCloseModal}>
-      <TouchableOpacity style={styles.centeredView} onPress={requestCloseModal}>
+      <View style={styles.centeredView}>
         <View style={styles.modalView}>
-          <DatePicker date={date} onDateChange={onDateChange} />
+          <Text style={{fontSize: 20, marginBottom: 50, fontWeight: 'bold'}}>
+            Hoạt động:{' '}
+            <Text style={{fontWeight: 'normal', fontStyle: 'italic'}}>
+              {action.name}
+            </Text>
+          </Text>
+          {/* Check action eat */}
+          {action === Constants.action.EAT && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 20,
+              }}>
+              <RadioButton
+                selected={mamaMilk}
+                toggleMilk={toggleMilk}
+                label="Sữa mẹ"
+              />
+              <Slider
+                style={{width: 160, height: 40}}
+                minimumValue={100}
+                maximumValue={200}
+                step={20}
+                value={milkVolume}
+                onValueChange={changeMilkVolume}
+                minimumTrackTintColor="#000"
+                maximumTrackTintColor="#000"
+              />
+              <Text style={{fontSize: 20}}>{milkVolume} ml</Text>
+            </View>
+          )}
+          {/* End */}
+          <View style={{alignItems: 'center'}}>
+            <Text style={{fontSize: 24}}>Chọn thời gian:</Text>
+            <DatePicker date={date} onDateChange={onDateChange} />
+          </View>
           <View style={styles.modalButtons}>
             <TouchableOpacity style={styles.modalButton} onPress={onSave}>
               <Text style={styles.modalButtonText}>Save</Text>
@@ -32,7 +80,7 @@ export default function ActionModal({
             </TouchableOpacity>
           </View>
         </View>
-      </TouchableOpacity>
+      </View>
     </Modal>
   );
 }
@@ -52,7 +100,7 @@ const styles = StyleSheet.create({
   },
   modalButtons: {
     marginTop: 30,
-    width: PlatformDevices.deviceWidth / 3,
+    width: 200,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },

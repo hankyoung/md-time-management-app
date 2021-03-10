@@ -2,22 +2,22 @@ import React from 'react';
 import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
 import {useState} from 'react';
 import {format} from 'date-fns';
-import PlatformDevices from '../utils/PlatformDevices';
 import Constants from '../utils/Constants';
 import ActionModal from '../modals/ActionModal';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [date, setDate] = useState(new Date());
-  const [action, setAction] = useState('');
+  const [action, setAction] = useState({});
+  const [mamaMilk, setMamaMilk] = useState(false);
+  const [milkVolume, setMilkVolume] = useState(120);
 
-  const resetDate = () => {
-    setDate(new Date());
-  };
-
-  const closeModal = () => {
-    setModalVisible(!modalVisible);
-  };
+  const resetDate = () => setDate(new Date());
+  const onDateChange = (date) => setDate(date);
+  const changeMilkVolume = (volume) => setMilkVolume(volume);
+  const closeModal = () => setModalVisible(!modalVisible);
+  const toggleMilk = () => setMamaMilk(!mamaMilk);
 
   const onTapActionButton = (action) => {
     resetDate();
@@ -44,36 +44,46 @@ export default function HomeScreen() {
   };
 
   return (
-    <View>
+    <View style={{backgroundColor: '#F3F3F3'}}>
       <Info />
-      <View style={styles.categories}>
-        <ActionButton
-          title="Ăn"
-          action={Constants.actionType.EAT}
-          onTapActionButton={onTapActionButton}
-        />
-        <ActionButton
-          title="Ngủ"
-          action={Constants.actionType.SLEEP}
-          onTapActionButton={onTapActionButton}
-        />
-        <ActionButton
-          title="Dậy"
-          action={Constants.actionType.WAKE}
-          onTapActionButton={onTapActionButton}
-        />
-        <ActionButton
-          title="Ị"
-          action={Constants.actionType.POO}
-          onTapActionButton={onTapActionButton}
-        />
+      <View style={styles.actionContainer}>
+        <Text style={{marginBottom: 10, fontSize: 16}}>Hoạt động:</Text>
+        <View style={styles.row}>
+          <ActionButton
+            icon={<Icon name="baby-bottle-outline" size={30} />}
+            action={Constants.action.EAT}
+            onTapActionButton={onTapActionButton}
+          />
+          <ActionButton
+            icon={<Icon name="bed-outline" size={30} />}
+            action={Constants.action.SLEEP}
+            onTapActionButton={onTapActionButton}
+          />
+        </View>
+        <View style={styles.row}>
+          <ActionButton
+            icon={<Icon name="baby-face-outline" size={30} />}
+            action={Constants.action.WAKE}
+            onTapActionButton={onTapActionButton}
+          />
+          <ActionButton
+            icon={<Icon name="toilet" size={30} />}
+            action={Constants.action.POO}
+            onTapActionButton={onTapActionButton}
+          />
+        </View>
       </View>
       <ActionModal
         modalVisible={modalVisible}
         requestCloseModal={closeModal}
         date={date}
-        onDateChange={setDate}
+        onDateChange={onDateChange}
         onSave={onSave}
+        action={action}
+        mamaMilk={mamaMilk}
+        toggleMilk={toggleMilk}
+        milkVolume={milkVolume}
+        changeMilkVolume={changeMilkVolume}
       />
     </View>
   );
@@ -83,10 +93,10 @@ function Info() {
   return (
     <View style={styles.info}>
       <View style={styles.infoLeft}>
+        <Text style={{fontSize: 20}}>Xin chào, Anh!</Text>
         <Text style={{color: 'grey'}}>
           {format(new Date(), 'MMMM dd yyyy')}
         </Text>
-        <Text style={{fontSize: 30}}>Welcome, Anh!</Text>
       </View>
       <View style={styles.infoRight}>
         <Image source={require('../assets/avatar.png')} style={styles.avatar} />
@@ -95,12 +105,27 @@ function Info() {
   );
 }
 
-function ActionButton({title, action, onTapActionButton}) {
+function ActionButton({icon, action, onTapActionButton}) {
   return (
     <TouchableOpacity
-      style={styles.actionButton}
+      style={{
+        height: 80,
+        width: '49%',
+        borderRadius: 15,
+        alignItems: 'flex-start',
+        padding: 20,
+        justifyContent: 'center',
+        backgroundColor: '#FDFDFD',
+        shadowColor: 'black',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.3,
+        elevation: 3,
+      }}
       onPress={() => onTapActionButton(action)}>
-      <Text style={{color: '#117D89', fontSize: 20}}>{title}</Text>
+      <View style={{alignItems: 'center', justifyContent: 'space-between'}}>
+        {icon}
+        <Text style={{fontSize: 14}}>{action.name}</Text>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -122,9 +147,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
   },
-  categories: {
-    height: '85%',
+  row: {
+    flexDirection: 'row',
+    width: '100%',
     justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  actionContainer: {
+    height: '85%',
+    marginTop: 50,
     marginHorizontal: Constants.appMargin,
     paddingBottom: 12,
   },
@@ -132,14 +163,5 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-  },
-  actionButton: {
-    height: PlatformDevices.deviceHeight / 5.5,
-    width: '100%',
-    borderRadius: 15,
-    borderWidth: 1.5,
-    borderColor: '#117D89',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

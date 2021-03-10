@@ -1,11 +1,31 @@
 import React from 'react';
 import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import {useState} from 'react';
 import {format} from 'date-fns';
 import PlatformDevices from '../utils/PlatformDevices';
 import Constants from '../utils/Constants';
+import ActionModal from '../modals/ActionModal';
 
 export default function HomeScreen() {
-  const handlePressButton = async (action) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [date, setDate] = useState(new Date());
+  const [action, setAction] = useState('');
+
+  const resetDate = () => {
+    setDate(new Date());
+  };
+
+  const closeModal = () => {
+    setModalVisible(!modalVisible);
+  };
+
+  const onTapActionButton = (action) => {
+    resetDate();
+    setModalVisible(true);
+    setAction(action);
+  };
+
+  const onSave = async () => {
     try {
       const url = `http://128.199.116.189:8180/api/v1/public/activities?action=${action}`;
       const response = await fetch(url, {
@@ -17,6 +37,7 @@ export default function HomeScreen() {
       });
       const result = await response.json();
       alert(`${result.message} hành động ${result.data.activityDesc}`);
+      closeModal();
     } catch (error) {
       alert(error);
     }
@@ -24,49 +45,63 @@ export default function HomeScreen() {
 
   return (
     <View>
-      <View style={styles.info}>
-        <View style={styles.infoLeft}>
-          <Text style={{color: 'grey'}}>
-            {format(new Date(), 'MMMM dd yyyy')}
-          </Text>
-          <Text style={{fontSize: 30}}>Welcome, Anh!</Text>
-        </View>
-        <View style={styles.infoRight}>
-          <Image
-            source={require('../assets/avatar.png')}
-            style={styles.avatar}
-          />
-        </View>
-      </View>
+      <Info />
       <View style={styles.categories}>
-        <TouchableOpacity
-          onPress={() => {
-            handlePressButton('EAT');
-          }}>
-          <ActionButton title="Ăn" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            handlePressButton('SLEEP');
-          }}>
-          <ActionButton title="Ngủ" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handlePressButton('WAKE')}>
-          <ActionButton title="Dậy" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handlePressButton('POO')}>
-          <ActionButton title="Ị" />
-        </TouchableOpacity>
+        <ActionButton
+          title="Ăn"
+          action={Constants.actionType.EAT}
+          onTapActionButton={onTapActionButton}
+        />
+        <ActionButton
+          title="Ngủ"
+          action={Constants.actionType.SLEEP}
+          onTapActionButton={onTapActionButton}
+        />
+        <ActionButton
+          title="Dậy"
+          action={Constants.actionType.WAKE}
+          onTapActionButton={onTapActionButton}
+        />
+        <ActionButton
+          title="Ị"
+          action={Constants.actionType.POO}
+          onTapActionButton={onTapActionButton}
+        />
+      </View>
+      <ActionModal
+        modalVisible={modalVisible}
+        requestCloseModal={closeModal}
+        date={date}
+        onDateChange={setDate}
+        onSave={onSave}
+      />
+    </View>
+  );
+}
+
+function Info() {
+  return (
+    <View style={styles.info}>
+      <View style={styles.infoLeft}>
+        <Text style={{color: 'grey'}}>
+          {format(new Date(), 'MMMM dd yyyy')}
+        </Text>
+        <Text style={{fontSize: 30}}>Welcome, Anh!</Text>
+      </View>
+      <View style={styles.infoRight}>
+        <Image source={require('../assets/avatar.png')} style={styles.avatar} />
       </View>
     </View>
   );
 }
 
-function ActionButton({title}) {
+function ActionButton({title, action, onTapActionButton}) {
   return (
-    <View style={styles.categoryImage}>
+    <TouchableOpacity
+      style={styles.actionButton}
+      onPress={() => onTapActionButton(action)}>
       <Text style={{color: '#117D89', fontSize: 20}}>{title}</Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -98,7 +133,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
   },
-  categoryImage: {
+  actionButton: {
     height: PlatformDevices.deviceHeight / 5.5,
     width: '100%',
     borderRadius: 15,

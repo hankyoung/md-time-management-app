@@ -53,9 +53,9 @@ export default function ActionModal({
               />
               <Slider
                 style={{width: 160, height: 40}}
-                minimumValue={100}
-                maximumValue={200}
-                step={20}
+                minimumValue={30}
+                maximumValue={160}
+                step={10}
                 value={milkVolume}
                 onValueChange={changeMilkVolume}
                 minimumTrackTintColor="#000"
@@ -97,6 +97,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 20,
     padding: 24,
+    width: '95%',
   },
   modalButtons: {
     marginTop: 30,

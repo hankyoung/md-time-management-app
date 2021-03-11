@@ -12,6 +12,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import HomeScreen from './screens/HomeScreen';
 import SummaryScreen from './screens/SummaryScreen';
+import Constants from './utils/Constants';
 
 const Tab = createBottomTabNavigator();
 
@@ -26,7 +27,7 @@ const App: () => React$Node = () => {
               case 'Home':
                 iconName = focused ? 'home' : 'home-outline';
                 break;
-              case 'Summary':
+              case 'History':
                 iconName = focused ? 'file-tray' : 'file-tray-outline';
                 break;
             }
@@ -34,11 +35,11 @@ const App: () => React$Node = () => {
           },
         })}
         tabBarOptions={{
-          activeTintColor: 'tomato',
+          activeTintColor: Constants.colors.darkBlue,
           inactiveTintColor: 'gray',
         }}>
         <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Summary" component={SummaryScreen} />
+        <Tab.Screen name="History" component={SummaryScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );

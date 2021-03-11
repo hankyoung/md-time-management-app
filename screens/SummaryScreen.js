@@ -1,95 +1,229 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Image, FlatList} from 'react-native';
 import Constants from '../utils/Constants';
-import Icon from 'react-native-vector-icons/Ionicons';
+import {format} from 'date-fns';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function SummaryScreen() {
-  const items = [
-    {id: '0', title: 'Beef', image: require('../assets/beef.jpeg')},
-    {id: '1', title: 'Vegetables', image: require('../assets/vegetables.png')},
-    {id: '2', title: 'Eggs', image: require('../assets/eggs-and-dairy.png')},
-  ];
+  const [items, setItems] = useState([]);
+  const [refresh, setRefresh] = useState(false);
+  const [totalMamaMilk, setTotalMamaMilk] = useState(0);
+  const [totalFormulaMilk, setTotalFormulaMamaMilk] = useState(0);
+  const [totalSleepTime, setTotalSleepTime] = useState(0);
+
+  const fetchData = async (timestamp) => {
+    const response = await fetch(
+      `http://192.168.1.17:8180/api/v1/public/activities?timestamp=${timestamp}`,
+    );
+    const jsonData = await response.json();
+    console.log(jsonData);
+    setItems(jsonData.data);
+  };
+
+  useEffect(() => {
+    let timestamp = new Date().getTime() / 1000;
+    console.log(timestamp);
+    fetchData(parseInt(timestamp, 10));
+  }, []);
+
+  useEffect(() => {
+    if (!refresh) return;
+    let timestamp = new Date().getTime() / 1000;
+    console.log(timestamp);
+    fetchData(parseInt(timestamp, 10));
+  }, [refresh]);
+
+  // Calculate summary index
+  useEffect(() => {
+    if (!items) return;
+    let mamaMilk = 0;
+    let formulaMilk = 0;
+    let totalSleepTime = 0;
+
+    for (let i = 0; i < items.length; i++) {
+      let item = items[i];
+      if (item.activity === Constants.action.EAT.type) {
+        if (item.isMamaMilk) {
+          mamaMilk += item.volume;
+        } else {
+          formulaMilk += item.volume;
+        }
+      } else if (
+        item.activity === Constants.action.SLEEP.type &&
+        item.status === Constants.actionStatus.ACTIVE
+      ) {
+        totalSleepTime += item.endTime - item.startTime;
+      }
+    }
+
+    setTotalMamaMilk(mamaMilk);
+    setTotalFormulaMamaMilk(formulaMilk);
+    setTotalSleepTime(totalSleepTime);
+  }, [items]);
+
+  const _onRefresh = () => {
+    resetStates();
+    setRefresh(true);
+    setTimeout(() => {
+      setRefresh(false);
+    }, 200);
+  };
+
+  const resetStates = () => {
+    setItems([]);
+  };
 
   const _renderItem = ({item}) => (
-    <ListItem image={item.image} title={item.title} />
+    <ListItem
+      time={format(
+        new Date(item.createdOn * 1000),
+        Constants.dateFormat.dateTime,
+      )}
+      activityDesc={item.activityDesc}
+      moreDetail={
+        item.activity === Constants.action.EAT.type
+          ? item.isMamaMilk
+            ? `${item.volume} ml sữa mẹ`
+            : `${item.volume} ml sữa công thức`
+          : null
+      }
+    />
   );
 
+  const convertSecondToHour = (seconds) => {
+    let helperDate = new Date(0).getTime() / 1000 + seconds - 25200; // Minus 7 hours because of timezone
+    return format(new Date(helperDate * 1000), 'HH:mm:ss');
+  };
+
   return (
-    <View style={styles.container}>
-      <FlatList
-        style={styles.list}
-        data={items}
-        renderItem={_renderItem}
-        keyExtractor={(item) => item.id}
-      />
+    <View style={{backgroundColor: Constants.colors.backgroundColor}}>
+      <View
+        style={{
+          backgroundColor: Constants.colors.darkBlue,
+          height: '25%',
+          alignItems: 'center',
+          justifyContent: 'space-evenly',
+        }}>
+        <SummaryContent
+          content={'Lịch sử'}
+          title={format(new Date(), Constants.dateFormat.date)}
+          contentStyle={{fontSize: 18, fontWeight: 'normal'}}
+        />
+        <View
+          style={{
+            width: '100%',
+            flexDirection: 'row',
+            justifyContent: 'space-evenly',
+          }}>
+          <SummaryContent
+            content={totalMamaMilk}
+            unit={'ml'}
+            title={`Tổng sữa mẹ`}
+          />
+          <SummaryContent
+            content={totalFormulaMilk}
+            unit={'ml'}
+            title={'Tổng sữa công thức'}
+          />
+          <SummaryContent
+            content={convertSecondToHour(totalSleepTime)}
+            title={'Tổng thời gian ngủ'}
+          />
+        </View>
+      </View>
+
+      <View
+        style={{
+          height: '75%',
+          alignItems: 'center',
+        }}>
+        {!items && <Text style={{marginTop: 30}}>Không tìm thấy dữ liệu!</Text>}
+        <FlatList
+          style={styles.list}
+          data={items}
+          renderItem={_renderItem}
+          keyExtractor={(item) => item.id}
+          refreshing={refresh}
+          onRefresh={_onRefresh}
+        />
+      </View>
     </View>
   );
 }
 
-const ListItem = ({image, title}) => {
+const SummaryContent = ({content, unit, title, contentStyle}) => {
+  return (
+    <View style={{alignItems: 'center'}}>
+      <Text
+        style={[
+          {color: '#fff', fontSize: 14, fontWeight: 'bold'},
+          contentStyle,
+        ]}>
+        {content} {unit}
+      </Text>
+      <Text style={{color: '#fff', fontSize: 10}}>{title}</Text>
+    </View>
+  );
+};
+
+const ListItem = ({activityDesc, time, moreDetail}) => {
   return (
     <View style={styles.itemContainer}>
-      <View style={styles.selectItem}>
-        <View style={styles.leftView}>
-          <Image source={image} style={styles.leftImage} />
-          <Text style={styles.title}>{title}</Text>
-        </View>
-        <View style={styles.rightTextView}>
-          <Text>10</Text>
-          <Text> kcal</Text>
+      <View style={styles.leftItemView}>
+        <Icon
+          name="checkbox-marked-circle-outline"
+          size={30}
+          color={Constants.colors.darkBlue}
+        />
+        <View style={{marginLeft: 10}}>
+          <Text style={{fontSize: 12}}>{time}</Text>
+          <Text style={{fontSize: 10, color: 'grey'}}>
+            {activityDesc} {moreDetail}
+          </Text>
         </View>
       </View>
-      <View style={styles.dividerContainer}>
-        <View style={styles.divider} />
+      <View style={styles.rightTextView}>
+        <Icon
+          name="chevron-right"
+          size={20}
+          color={Constants.colors.darkBlue}
+        />
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginHorizontal: Constants.appMargin,
-    marginTop: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 10,
-      height: -10,
-    },
-    shadowOpacity: 0.5,
-    shadowRadius: 2,
-
-    elevation: 3,
-  },
   list: {
     width: '100%',
   },
   itemContainer: {
     alignItems: 'center',
-    marginBottom: 10,
-  },
-  selectItem: {
-    width: '100%',
-    height: 60,
+    marginVertical: 3,
+    marginHorizontal: Constants.appMargin,
+    backgroundColor: '#fff',
+
+    height: 64,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+
+    borderRadius: 5,
+    shadowColor: 'black',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    elevation: 1,
   },
-  leftView: {
+  leftItemView: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginLeft: 10,
   },
   leftImage: {
     width: 42,
     height: 42,
     marginLeft: 15,
     borderRadius: 30,
-  },
-  title: {
-    marginLeft: 15,
-    fontSize: 14,
   },
   rightTextView: {
     flexDirection: 'row',

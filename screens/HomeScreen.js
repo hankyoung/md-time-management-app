@@ -41,12 +41,15 @@ export default function HomeScreen() {
   };
 
   const onSave = async () => {
-    const payload = {
+    let payload = {
       createdOn: date.valueOf() / 1000,
       activity: action.type,
-      volume: milkVolume,
-      isMamaMilk: mamaMilk,
     };
+
+    if (action === Constants.action.EAT) {
+      payload = {...payload, volume: milkVolume, isMamaMilk: mamaMilk};
+    }
+    console.log(`payload: ${JSON.stringify(payload)}`);
 
     try {
       // const url = `http://128.199.116.189:8180/api/v1/public/activities?action=${action.type}`;
@@ -68,32 +71,49 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={{backgroundColor: '#F3F3F3'}}>
+    <View style={{backgroundColor: Constants.colors.backgroundColor}}>
       <Info />
       <View style={styles.actionContainer}>
-        <Text style={{marginBottom: 10, fontSize: 16, fontStyle: 'italic'}}>
-          Hoạt động:
-        </Text>
         <View style={styles.row}>
           <ActionButton
-            icon={<Icon name="baby-bottle-outline" size={30} />}
+            icon={
+              <Icon
+                name="baby-bottle-outline"
+                size={30}
+                color={Constants.colors.darkBlue}
+              />
+            }
             action={Constants.action.EAT}
             onTapActionButton={onTapActionButton}
           />
           <ActionButton
-            icon={<Icon name="bed-outline" size={30} />}
+            icon={
+              <Icon
+                name="bed-outline"
+                size={30}
+                color={Constants.colors.darkBlue}
+              />
+            }
             action={Constants.action.SLEEP}
             onTapActionButton={onTapActionButton}
           />
         </View>
         <View style={styles.row}>
           <ActionButton
-            icon={<Icon name="baby-face-outline" size={30} />}
+            icon={
+              <Icon
+                name="baby-face-outline"
+                size={30}
+                color={Constants.colors.darkBlue}
+              />
+            }
             action={Constants.action.WAKE}
             onTapActionButton={onTapActionButton}
           />
           <ActionButton
-            icon={<Icon name="toilet" size={30} />}
+            icon={
+              <Icon name="toilet" size={30} color={Constants.colors.darkBlue} />
+            }
             action={Constants.action.POO}
             onTapActionButton={onTapActionButton}
           />
@@ -119,9 +139,16 @@ function Info() {
   return (
     <View style={styles.info}>
       <View style={styles.infoLeft}>
-        <Text style={{fontSize: 20, fontWeight: 'bold'}}>Xin chào, Anh!</Text>
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: Constants.colors.darkBlue,
+          }}>
+          Xin chào, Anh!
+        </Text>
         <Text style={{color: 'grey'}}>
-          {format(new Date(), 'MMMM dd yyyy')}
+          {format(new Date(), Constants.dateFormat.dateTime)}
         </Text>
       </View>
       <View style={styles.infoRight}>
@@ -150,7 +177,9 @@ function ActionButton({icon, action, onTapActionButton}) {
       onPress={() => onTapActionButton(action)}>
       <View style={{alignItems: 'center', justifyContent: 'space-between'}}>
         {icon}
-        <Text style={{fontSize: 14}}>{action.name}</Text>
+        <Text style={{fontSize: 14, color: Constants.colors.darkBlue}}>
+          {action.name}
+        </Text>
       </View>
     </TouchableOpacity>
   );
